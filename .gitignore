@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+dist/
+build/
+
+# Secrets — settings in config, secrets in env; NEVER commit env files
+.env
+.env.*
+*.env
+infra/*.env
+
+# OS / editor
+.DS_Store
+*.log
+.idea/
+.vscode/
