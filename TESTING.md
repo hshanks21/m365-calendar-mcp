@@ -12,6 +12,9 @@ npm run build
 npm run smoke
 node --test dist/test/*.test.js
 docker build -f deploy/Dockerfile -t calendar-mcp:review .
+node --test scripts/release-guard.test.mjs
+# With actionlint installed (local validation used v1.7.12):
+actionlint .github/workflows/*.yml
 git diff --check
 ```
 

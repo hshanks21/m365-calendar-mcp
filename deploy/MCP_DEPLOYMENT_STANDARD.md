@@ -21,7 +21,7 @@ Prefer a project-private bridge. Publish native MCP only on an explicit loopback
 
 ## Release trigger: version tags only
 
-Future CI/CD should trigger on pushed, approved **`vMAJOR.MINOR.PATCH`** Git tags (for example `v1.2.3`), with strict full-pattern validation. A broad `v*` workflow filter alone is insufficient; reject malformed/non-SemVer tags in a validation job. Do not auto-deploy branch pushes, PR builds, mutable `latest`, or arbitrary rebuilds. Do not create a workflow/remote/registry in this Docker migration.
+Implemented Calendar image publication and future services must trigger on pushed, approved **`vMAJOR.MINOR.PATCH`** Git tags (for example `v1.2.3`), with strict full-pattern validation. A broad `v*` workflow filter alone is insufficient; reject malformed/non-SemVer tags in a validation job. Do not auto-deploy branch pushes, PR builds, mutable `latest`, or arbitrary rebuilds. Calendar workflow implementation is documented in [RELEASING.md](../RELEASING.md); it publishes images only and has no automated host deployment.
 
 For each release:
 

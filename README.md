@@ -48,7 +48,7 @@ Runtime supports explicit Microsoft app-only or delegated-confidential mode, Goo
 - [SETUP.md](SETUP.md), [M365_RUNTIME.md](M365_RUNTIME.md), [GOOGLE_CONNECTOR.md](GOOGLE_CONNECTOR.md): configuration and provider semantics.
 - [M365_CONFIDENTIAL.md](M365_CONFIDENTIAL.md), [M365_DELEGATED.md](M365_DELEGATED.md), [M365_SUPABASE.md](M365_SUPABASE.md): gated operator bootstrap guides.
 - [DESIGN.md](DESIGN.md), [TESTING.md](TESTING.md), [VALIDATION.md](VALIDATION.md): UI and reproducibility.
-- [Docker runbook](deploy/DOCKER_RUNBOOK.md), [deployment/release standard](deploy/MCP_DEPLOYMENT_STANDARD.md), [RELEASING.md](RELEASING.md): build versus deployment/release authority. No CI workflow or tag is created by this import.
+- [Docker runbook](deploy/DOCKER_RUNBOOK.md), [deployment/release standard](deploy/MCP_DEPLOYMENT_STANDARD.md), [RELEASING.md](RELEASING.md): build versus deployment/release authority. PR/branch CI and guarded tag-only GHCR publication are implemented; deployment remains manual and separately approved. The release vulnerability scan currently blocks the unchanged base image; see RELEASING.
 - [CHANGELOG.md](CHANGELOG.md), [IDEAS.md](IDEAS.md), [TEMPLATE-README.md](TEMPLATE-README.md): history, proposals and scaffold provenance.
 
 ## Attribution and licensing

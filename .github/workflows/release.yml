@@ -1,0 +1,125 @@
+name: Release image
+
+on:
+  push:
+    tags: ["v[0-9]*.[0-9]*.[0-9]*"]
+
+permissions: {}
+
+# Serialize all releases (including reruns); never cancel a partial publication.
+concurrency:
+  group: ghcr-calendar-release
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'push' && github.ref_type == 'tag' && github.repository == 'hshanks21/m365-calendar-mcp'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      sha-tag: ${{ steps.release.outputs.sha-tag }}
+      image: ${{ steps.release.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.21.0"
+      - run: node --test scripts/release-guard.test.mjs
+      - id: release
+        run: node scripts/release-guard.mjs validate
+      - name: Require tagged commit on main
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor HEAD origin/main
+
+  publish:
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ${{ needs.validate.outputs.image }}
+      VERSION: ${{ needs.validate.outputs.version }}
+      SHA_TAG: ${{ needs.validate.outputs.sha-tag }}
+      # Do not upload implicit build records or add GitHub artifacts permissions.
+      DOCKER_BUILD_RECORD_UPLOAD: "false"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.21.0"
+      - name: Refuse existing version or commit tags
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+        run: node scripts/release-guard.mjs assert-new
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        with:
+          version: v0.33.0
+          driver-opts: image=moby/buildkit:v0.28.0@sha256:37539dd4d60fc70968d164d3850d903a2c56f6402214a1953fbf9fcb81ada731
+          buildkitd-flags: --oci-worker-gc
+      - name: Build once with tests, provenance and SBOM (not published)
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/amd64
+          push: false
+          outputs: type=oci,dest=${{ runner.temp }}/calendar.oci.tar
+          provenance: mode=max
+          attests: type=sbom,generator=docker/buildkit-syft-scanner@sha256:ae4f3b554449e7e25548e7d8ccc029d17357348e30c6e3df01b92bc93654d6a9
+          labels: |
+            org.opencontainers.image.source=https://github.com/hshanks21/m365-calendar-mcp
+            org.opencontainers.image.version=${{ needs.validate.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: Extract OCI layout for scanner
+        run: |
+          mkdir "$RUNNER_TEMP/calendar-oci"
+          tar -xf "$RUNNER_TEMP/calendar.oci.tar" -C "$RUNNER_TEMP/calendar-oci"
+      - name: Block fixable HIGH and CRITICAL OS/library vulnerabilities
+        id: scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0 (peeled commit)
+        with:
+          version: v0.74.0
+          scan-type: image
+          input: ${{ runner.temp }}/calendar-oci
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          cache: false
+          timeout: 10m
+      - name: Report all severities, including unfixed vulnerabilities
+        if: success() || (failure() && steps.scan.outcome == 'failure')
+        run: trivy image --input "$RUNNER_TEMP/calendar-oci" --scanners vuln --ignore-unfixed=false --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL --exit-code 0 --timeout 10m
+      - name: Install registry copy tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y skopeo
+      - name: Publish the scanned OCI index without rebuilding
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          node scripts/release-guard.mjs assert-new
+          authfile="$RUNNER_TEMP/ghcr-auth.json"
+          trap 'rm -f "$authfile"' EXIT
+          printf '%s' "$GHCR_TOKEN" | skopeo login --authfile "$authfile" --username "$GITHUB_ACTOR" --password-stdin ghcr.io
+          for tag in "$VERSION" "$SHA_TAG"; do
+            skopeo copy --all --preserve-digests --authfile "$authfile" \
+              "oci-archive:$RUNNER_TEMP/calendar.oci.tar" "docker://$IMAGE:$tag"
+          done
+          node scripts/release-guard.mjs verify
+          printf '## Published image (not deployed)\n\n`%s@%s`\n\nTags: `%s`, `%s`\n\nSource: `%s`\n' \
+            "$IMAGE" "$IMAGE_DIGEST" "$VERSION" "$SHA_TAG" "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
