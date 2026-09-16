@@ -1,0 +1,37 @@
+name: calendar-mcp-review
+services:
+  calendar:
+    image: ${CALENDAR_IMAGE:?Use a reviewed immutable image ID or registry digest}
+    # Linux-only: the server validates exact loopback Host/Origin.
+    network_mode: host
+    user: "1000:1000"
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 2
+    restart: "no"
+    stop_grace_period: 30s
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "3"}
+    # Baseline is dashboard-only; add providers only in a reviewed private
+    # stdin overlay. Never inject blank/partial provider settings.
+    environment:
+      CALENDAR_DASHBOARD_SECRET: ${CALENDAR_DASHBOARD_SECRET:?Inject privately at runtime}
+      CALENDAR_TELEMETRY_FILE: /app/var/telemetry.json
+    volumes:
+      - type: bind
+        source: ${CALENDAR_DATA_DIR:?Use a private absolute directory owned by UID 1000}
+        target: /app/var
+        bind: {create_host_path: false}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3218/api/diagnostics',{signal:AbortSignal.timeout(3000)}).then(r=>{if(r.status!==401)process.exitCode=1}).catch(()=>{process.exitCode=1})"]
+      interval: 30s
+      timeout: 8s
+      start_period: 15s
+      retries: 3

@@ -1,45 +1,56 @@
-<!--
-════════════════════════════════════════════════════════════════════════════
-ABOUT THIS DOCUMENT — README.md
-Purpose : The front door. What this project is, how to run it, and an index to
-          every other doc. The first thing a human OR an agent reads.
-Audience: Everyone — new contributors, users, and agents orienting themselves.
-Update  : Whenever the elevator pitch, quickstart, or doc set changes.
-Belongs : One-paragraph "what & why", quickstart/setup, a table linking the
-          other docs in reading order, tech-stack summary.
-NOT here: Deep design rationale (→ ARCHITECTURE.md), the plan (→ PLAN.md),
-          data model (→ SCHEMA.md). Keep it a map, not the territory.
-Delete this comment block once the README holds real content.
-════════════════════════════════════════════════════════════════════════════
--->
+# M365 Calendar MCP
 
-# <Project Name>
+Read-only Microsoft 365 and Google calendar tools for independently scoped native MCP clients, with a separately authenticated operations dashboard. Tool callers receive narrow calendar projections; the dashboard receives sanitized usage counts, never meetings or credentials.
 
-<One paragraph: what this project is and why it exists. Plain language.>
+## Repository and installation boundary
 
-## Quickstart
+**This is now the authoritative executable source repository**, including the pinned package/lockfile, TypeScript modules, synthetic tests, frontend/font licenses and Docker build. It is no longer documentation-only. The existing installation in `../mcp-server-calendar` is a separate deployment: importing or pushing this checkout does not restart it, move its bind mounts, migrate Doppler scope, or publish a release.
 
-```bash
-# clone, install, run — the shortest path to "it's working locally"
+`AGENTS.md` contains owner-provided working instructions, but its old docs-only wording is stale. The protected-file update was denied during import; it was preserved, not bypassed. Follow the current checkout commands here while retaining its review/security boundaries.
+
+## Reproduce without credentials
+
+Node **24 or later**, npm and OpenSSL (synthetic TLS fixtures):
+
+```sh
+npm ci
+npm test
+npm run typecheck
+npm run build
+npm run smoke
+node --test dist/test/*.test.js
+# Runs synthetic checks inside the image build; no local-config required:
+docker build -f deploy/Dockerfile -t calendar-mcp:review .
 ```
 
-## Documentation (read in this order)
+No production credentials or provider access are needed for these checks. See [TESTING.md](TESTING.md). Runtime startup requires privately provisioned configuration; `.env.example` lists names only and is not automatically loaded. See [SETUP.md](SETUP.md).
 
-| # | Document | What it defines |
-|---|----------|-----------------|
-| 1 | [PLAN.md](./PLAN.md) | The build roadmap — milestones, scope, acceptance. **Start here.** |
-| 2 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Components, data flow, key decisions. |
-| 3 | [SCHEMA.md](./SCHEMA.md) | Data model + invariants. |
-| 4 | [AGENTS.md](./AGENTS.md) | How agents/contributors operate here. |
-| 5 | [DESIGN.md](./DESIGN.md) | UI/UX spec + design tokens. |
+## Tools and modes
 
-**Planning:** [ROADMAP.md](./ROADMAP.md) (committed next work) ·
-[IDEAS.md](./IDEAS.md) (backlog of maybes) ·
-[HANDOFF.md](./HANDOFF.md) (where we left off / what's next).
+| Tool | Purpose |
+|---|---|
+| `list_calendars` | Caller-allowed aliases, not discovery of arbitrary calendars |
+| `list_events` | Bounded recurring-expanded read and private-safe projection |
+| `search_events` | Non-private subject-only literal search; complete fetch required |
+| `get_work_availability` | Free UTC intervals in one explicit calendar/window; complete fetch required |
+| `connection_status` | Configuration status, never a live readiness probe |
 
-**Releasing:** [RELEASING.md](./RELEASING.md) (tag-per-version procedure) ·
-[CHANGELOG.md](./CHANGELOG.md) (what shipped, per version).
+No create/update/delete, mail, arbitrary Graph/Google proxy or discovery MCP tool. Incomplete results must never be interpreted as an empty/free schedule. Google writes cannot be enabled by configuration.
 
-## Tech stack
+Runtime supports explicit Microsoft app-only or delegated-confidential mode, Google-only, combined, and dashboard-only. MCP stays at `http://127.0.0.1:3217/mcp`; dashboard defaults to exact `http://127.0.0.1:3218/` with optional reviewed private-IPv4 HTTPS.
 
-- <language / framework / datastore / key libraries — decided, not aspirational>
+**Public import safety:** confidential Microsoft account and optional Supabase project pins use deliberately unusable `example.invalid` placeholders. They retain exact-match checks; deployment-specific replacement needs review, not a wildcard or ambient credential fallback. Operator bootstrap cwd/scope is pinned to the executable checkout, never an environment override; the installed sibling retains its own existing scope. See [M365_RUNTIME.md](M365_RUNTIME.md).
+
+## Documentation
+
+- [AGENTS.md](AGENTS.md), [HANDOFF.md](HANDOFF.md), [PLAN.md](PLAN.md), [ROADMAP.md](ROADMAP.md): workflow, current gates and continuity.
+- [ARCHITECTURE.md](ARCHITECTURE.md), [SCHEMA.md](SCHEMA.md), [SECURITY.md](SECURITY.md): modules, contracts and trust boundaries.
+- [SETUP.md](SETUP.md), [M365_RUNTIME.md](M365_RUNTIME.md), [GOOGLE_CONNECTOR.md](GOOGLE_CONNECTOR.md): configuration and provider semantics.
+- [M365_CONFIDENTIAL.md](M365_CONFIDENTIAL.md), [M365_DELEGATED.md](M365_DELEGATED.md), [M365_SUPABASE.md](M365_SUPABASE.md): gated operator bootstrap guides.
+- [DESIGN.md](DESIGN.md), [TESTING.md](TESTING.md), [VALIDATION.md](VALIDATION.md): UI and reproducibility.
+- [Docker runbook](deploy/DOCKER_RUNBOOK.md), [deployment/release standard](deploy/MCP_DEPLOYMENT_STANDARD.md), [RELEASING.md](RELEASING.md): build versus deployment/release authority. No CI workflow or tag is created by this import.
+- [CHANGELOG.md](CHANGELOG.md), [IDEAS.md](IDEAS.md), [TEMPLATE-README.md](TEMPLATE-README.md): history, proposals and scaffold provenance.
+
+## Attribution and licensing
+
+The package remains private at `0.1.0`; this is not a release announcement. No root code license was supplied, and none is invented here. Owner licensing review remains a release/distribution gate. Cormorant Garamond, Space Grotesk and Rubik are self-hosted with their original SIL OFL notices and pinned source/checksums in `public/fonts/provenance.json`.

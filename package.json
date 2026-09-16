@@ -1,0 +1,37 @@
+{
+  "name": "mcp-server-calendar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "start": "node dist/src/main.js",
+    "smoke": "tsx --test test/mcp.test.ts test/google-mcp.test.ts test/m365-runtime.test.ts",
+    "google:oauth": "node dist/src/google-oauth-cli.js",
+    "google:discover": "node dist/src/google-discovery-cli.js",
+    "m365:oauth": "node dist/src/m365-oauth-cli.js",
+    "m365:oauth:code": "node dist/src/m365-code-cli.js",
+    "m365:discover": "node dist/src/m365-discovery-cli.js",
+    "m365:oauth:supabase": "node dist/src/supabase-cli.js"
+  },
+  "dependencies": {
+    "@azure/identity": "4.13.2",
+    "@azure/msal-node": "5.6.0",
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@supabase/auth-js": "2.116.0",
+    "express": "5.2.1",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "26.5.1",
+    "prettier": "3.9.6",
+    "tsx": "4.23.13",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,94 +1,19 @@
-<!--
-════════════════════════════════════════════════════════════════════════════
-ABOUT THIS DOCUMENT — RELEASING.md
-Purpose : The versioned-release procedure. Every version gets an annotated git
-          tag on HEAD, a CHANGELOG entry, and an explicit human approval before
-          anything is tagged or pushed. Tags are immutable markers of what was
-          deployed — this doc exists to slow down at the right moments.
-Audience: Whoever cuts a release (human or agent).
-Update  : If the release/versioning convention changes.
-Belongs : The semver rules, the phased tag-and-push workflow, the approval gate,
-          the hard "never" rules.
-NOT here: The changelog itself (→ CHANGELOG.md). This is the HOW; CHANGELOG is
-          the WHAT-shipped.
-Origin  : Distilled from the `release-tagging` agent skill. If you use that
-          skill, it enforces this same flow (it calls the changelog file
-          SESSION_NOTES.md; this template standardizes on CHANGELOG.md — point
-          the skill at CHANGELOG.md, or rename to taste, but keep ONE changelog).
-Delete this comment block once RELEASING is adopted.
-════════════════════════════════════════════════════════════════════════════
--->
+# Releasing — M365 Calendar MCP
 
-# RELEASING — <Project Name>
+## Current status
 
-Cut a versioned release: document → commit → **approval gate** → tag HEAD → push.
-Tags are immutable; the whole point is to be deliberate.
+This checkout now contains executable source and reproducible synthetic verification. Import and branch publication do not authorize a release tag or deployment. A package version string is not a release or live acceptance record. No commit, tag, push or repository setting change is authorized by this document alone.
 
-## Core principles
-- **Tags always go on HEAD** — never an older commit. A tag describes what's
-  deployed right now.
-- **Never tag or push without explicit human approval.** Stop and wait for a
-  "green light" every time. A pushed tag is hard to take back.
-- **One tag per release.** Immutable — never reuse, move, or overwrite.
-- **Semantic versioning:** `vMAJOR.MINOR.PATCH`, always with the `v` prefix.
-- **Annotated tags only:** `git tag -a` (carries message, author, date).
-- **Releases go out from `main`** (merge the feature branch first).
+## Future release gate
 
-## Version bump
-- **MAJOR (`vX.0.0`)** — breaking changes (incompatible API, schema migration,
-  removals). Stays `0` until the first production release.
-- **MINOR (`v0.Y.0`)** — new, non-breaking functionality.
-- **PATCH (`v0.0.Z`)** — fixes, perf, docs, dependency bumps, no-behavior refactors.
+1. Review the imported source and resolve licensing/attribution. Verify runtime assets, lockfile, tests and deployment packaging are actually in this repository; do not publish secrets, telemetry or private evidence.
+2. Gather real local and remote state: `git status --short`, `git branch --show-current`, `git tag --list --sort=-version:refname`, `git log --oneline -5`, and the exact intended remote. Release from reviewed `main`, not detached HEAD. Do not infer remote green from local tests; no release workflow is implemented. Future automation must use approved strict `vMAJOR.MINOR.PATCH` tags, not branch pushes; see [deployment standard](deploy/MCP_DEPLOYMENT_STANDARD.md).
+3. Run [TESTING.md](./TESTING.md) in the imported implementation, including compiled and browser checks. Document whether the release is local synthetic-only or separately administrator-accepted. Deployment success must have its own evidence.
+4. Select semantic version `vMAJOR.MINOR.PATCH`: breaking contract/security/config changes require an explicit compatibility decision (pre-1.0 incompatible work uses a minor bump); additive compatible behavior is minor, fixes/docs are patch. Keep the private package and MCP advertised version aligned when source is present.
+5. Add a dated, factual [CHANGELOG.md](./CHANGELOG.md) entry; summarize breaking changes and rollback/restart implications. Stage only reviewed files. Commit only with approval covering that action.
+6. Present exact HEAD SHA, proposed version, test results, live/synthetic status, release contents and push target; **wait for explicit tag/push approval**. A question or vague reply is not approval.
+7. After approval, create one annotated tag on reviewed HEAD, never reuse/move/overwrite tags. Push only the intended branch and specific new tag, not every local tag. Verify remote branch/tag object and peeled commit against intended HEAD before claiming publication.
 
-## Workflow
+## Rollback and operational cautions
 
-### Phase 0 — Pre-flight (gather state, don't assume)
-```bash
-git status --short                          # dirty tree? staged?
-git branch --show-current                   # expect: main
-git tag -l -n1 | sort -V | tail -5          # recent tags → latest version
-git log origin/main..HEAD --oneline         # commits not yet pushed
-```
-On a feature branch → merge to `main` first. Detached HEAD → stop.
-
-### Phase 1 — Update CHANGELOG.md
-Prepend the new version at the top (date + summary + Added/Fixed/Changed/Removed).
-See CHANGELOG.md.
-
-### Phase 2 — Commit (changelog included in this commit)
-```bash
-git add -A
-git commit -m "<type>: <summary> (vX.Y.Z)
-
-- what / why / notes"
-```
-Type prefix (`feat|fix|refactor|docs|chore`), version in the subject `(vX.Y.Z)`.
-
-### Phase 3 — STOP. Present + wait for approval ⏸️
-```
-✅ CHANGELOG.md updated
-✅ Committed to HEAD (<sha>)
-⏸️ Waiting for approval
-Proposed tag: vX.Y.Z   (<MAJOR/MINOR/PATCH> — one-line justification)
-Push target:  main → origin
-On approval:  git tag -a vX.Y.Z -m "vX.Y.Z - <summary>"
-              git push origin main --tags
-```
-A question or vague reply is NOT approval.
-
-### Phase 4 — Tag HEAD (after approval only)
-```bash
-git tag -a vX.Y.Z -m "vX.Y.Z - <one-line summary>"
-```
-
-### Phase 5 — Push commits + tag together, then verify
-```bash
-git push origin main --tags
-git ls-remote --tags origin "vX.Y.Z"        # confirm it landed
-```
-
-## Hard rules
-**Never:** tag/push before approval · tag a non-HEAD commit · move/overwrite a
-pushed tag · lightweight tags · release from anywhere but `main`.
-**Always:** wait for approval · annotated tag on HEAD · semver with `v` ·
-changelog in the tagged commit · push with `--tags` and verify on the remote.
+A tag identifies source, not necessarily what is deployed. Installation and deployment are separate approval gates. Do not imply a pushed tag starts a service. Rollback must retain credential protection, match configuration/schema compatibility, preserve or deliberately archive bounded telemetry and restart to apply policy/secret changes. Viewer sessions intentionally vanish on restart. Never downgrade to broader auth or weaken incomplete-result semantics for rollback convenience.

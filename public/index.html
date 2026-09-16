@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Calendar / dispatch</title>
+    <link rel="stylesheet" href="/app.css" />
+    <link
+      rel="preload"
+      href="/fonts/CormorantGaramond.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header class="masthead">
+      <a class="brand" href="/"
+        ><svg
+          class="brand-icon"
+          viewBox="0 0 24 24"
+          width="24"
+          height="24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path
+            d="M7 3v4m10-4v4M3 10h18M7 14h1m3 0h1m3 0h1M7 17h1m3 0h1m3 0h1"
+          />
+        </svg>
+        <span>calendar / dispatch</span></a
+      ><span class="mono mast-label">READ-ONLY MCP</span
+      ><span class="local">● &nbsp; Local</span>
+    </header>
+    <main>
+      <section id="login-panel" class="login">
+        <h1>A little calendar clarity.</h1>
+        <p class="subhead">
+          Your calendar’s workings. Not your meeting details.
+        </p>
+        <form id="login-form">
+          <label for="viewer-token">Dashboard viewer key</label>
+          <div class="login-row">
+            <input
+              id="viewer-token"
+              name="token"
+              type="password"
+              autocomplete="current-password"
+              required
+              minlength="32"
+              maxlength="256"
+            /><button type="submit">Sign in</button>
+          </div>
+          <p class="muted">
+            Use your independent viewer key, never an MCP, Microsoft or Google
+            credential.
+          </p>
+          <p id="login-error" role="alert"></p>
+        </form>
+      </section>
+      <div id="dashboard" hidden>
+        <div id="mode" class="notice"></div>
+        <section class="intro">
+          <div>
+            <h1>A little calendar clarity.</h1>
+            <p class="subhead">
+              Your agents are asking. Here’s how it’s going.
+            </p>
+          </div>
+          <div class="period" role="group" aria-label="Activity period">
+            <button data-period="today" aria-pressed="true">Today</button
+            ><button data-period="week" aria-pressed="false">Week</button
+            ><button data-period="month" aria-pressed="false">Month</button>
+          </div>
+        </section>
+        <section class="overview" aria-live="polite">
+          <div id="request-prose" class="metrics">Loading activity…</div>
+        </section>
+        <section class="callers">
+          <div class="section-head">
+            <h2>Who’s been asking?</h2>
+            <span id="caller-period" class="eyebrow">REQUESTS / TODAY</span>
+          </div>
+          <div
+            class="table-wrap"
+            tabindex="0"
+            role="region"
+            aria-label="Caller usage"
+          >
+            <table class="caller-table">
+              <caption class="sr-only">
+                Caller usage in the selected period
+              </caption>
+              <thead>
+                <tr>
+                  <th>Caller</th>
+                  <th>Approved access</th>
+                  <th>Requests</th>
+                </tr>
+              </thead>
+              <tbody id="callers"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="attention" aria-live="polite">
+          <h2 id="attention-title">Checking what needs you.</h2>
+          <p id="attention-detail"></p>
+        </section>
+        <section class="under-hood">
+          <div class="section-head">
+            <h2>Under the hood</h2>
+            <button
+              id="inspect"
+              class="text-button"
+              aria-expanded="false"
+              aria-controls="access-detail"
+            >
+              Inspect access
+            </button>
+          </div>
+          <div class="hood-row">
+            <span class="eyebrow">Connection</span
+            ><span id="connection">Calendar providers</span
+            ><span id="last-read" class="muted"></span>
+          </div>
+          <div class="hood-row">
+            <span class="eyebrow">Access</span><span id="access"></span
+            ><span class="muted">Read-only policy</span>
+          </div>
+          <div id="access-detail" class="detail" hidden></div>
+        </section>
+        <section class="paper">
+          <div class="section-head">
+            <h2>The paper trail</h2>
+            <button id="refresh" class="text-button">Refresh ↻</button>
+          </div>
+          <p class="small muted">
+            Sanitized outcomes only. Times shown in your browser’s timezone.
+          </p>
+          <div
+            class="table-wrap"
+            tabindex="0"
+            role="region"
+            aria-label="Recent activity; scroll horizontally on small screens"
+          >
+            <table>
+              <caption class="sr-only">
+                Recent MCP activity
+              </caption>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Caller</th>
+                  <th>Operation</th>
+                  <th>Outcome</th>
+                  <th>Reply</th>
+                </tr>
+              </thead>
+              <tbody id="logs"></tbody>
+            </table>
+          </div>
+          <p id="empty-logs" class="muted"></p>
+          <div class="pagination">
+            <button id="previous">← Newer</button
+            ><span id="page-label" class="mono muted"></span
+            ><button id="next">Older →</button>
+          </div>
+          <p id="coverage" class="small muted"></p>
+        </section>
+        <p id="fetch-error" role="alert"></p>
+        <div class="session-controls">
+          <span id="updated" class="small muted"></span
+          ><button id="logout" class="text-button">Sign out</button>
+        </div>
+      </div>
+    </main>
+    <footer>
+      <span>No meeting content in logs.</span><span>Calendar / dispatch</span>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+# Allowlist: no local configuration, environment, TLS, git, cache or evidence.
+**
+!package.json
+!package-lock.json
+!tsconfig.json
+!src/
+!src/**
+!test/
+!test/**
+!public/
+!public/**
+!deploy/
+!deploy/Dockerfile
+!deploy/healthcheck.mjs

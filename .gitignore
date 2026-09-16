@@ -1,17 +1,33 @@
-# Dependencies
+# Dependencies and generated build output
 node_modules/
-.venv/
-__pycache__/
 dist/
 build/
+.venv/
+__pycache__/
 
-# Secrets — settings in config, secrets in env; NEVER commit env files
+# Runtime credentials and local bearer policies
 .env
 .env.*
 *.env
 infra/*.env
+!.env.example
+policy*.json
+local-config/
+evidence/
+screenshots/
+*.pem
+*.key
+*.pfx
+*.p12
+.doppler/
+.cache/
 
-# OS / editor
+# Private runtime observations and temporary replacement files
+var/
+telemetry*.json
+telemetry*.json.tmp
+
+# OS/editor and local logs
 .DS_Store
 *.log
 .idea/

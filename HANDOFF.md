@@ -1,51 +1,20 @@
-<!--
-════════════════════════════════════════════════════════════════════════════
-ABOUT THIS DOCUMENT — HANDOFF.md
-Purpose : Session-to-session continuity. The "where we left off / what's next"
-          state so any new session (human or agent) picks up cold without
-          re-deriving context. The successor to ad-hoc SESSION_NOTES.
-Audience: The next person or agent to touch this project — including future-you.
-Update  : At the END of a work session (or when you pause). Overwrite the
-          "Current state / Left off / Next" sections; append to the log.
-Belongs : What's working now, what's in progress, exactly where work stopped,
-          the immediate next step, open questions/blockers, recent decisions.
-NOT here: The long-term plan (→ ROADMAP/PLAN). This is the volatile "right now"
-          layer — it changes every session.
-Why it exists even with agent memory: this file is version-controlled and lives
-          IN the repo, so it survives across machines, profiles, tools, and
-          teammates — unlike an agent's private session memory. If your agent
-          tool auto-loads context files (e.g. .hermes.md / AGENTS.md / CLAUDE.md),
-          either name this file that way or link it from the one that is loaded,
-          so a fresh session reads it automatically.
-Delete this comment block once HANDOFF holds real content.
-════════════════════════════════════════════════════════════════════════════
--->
+# Import handoff
 
-# HANDOFF — <Project Name>
+## Current state
 
-> The living "current state" of the project. Keep the top three sections fresh;
-> append to the log at the bottom.
+This repository now contains the executable implementation, lockfile, synthetic tests, frontend/font licenses and credential-free Docker packaging. Existing uncommitted documentation was preserved in review backups and deliberately reconciled, not reset. Independent review precedes commit/push on `feat/import-calendar-implementation`.
 
-## ✅ Current state (what works right now)
-- <shipped / working things, one line each>
+The installed sibling and running Docker service remain untouched: no credential reads/provisioning, provider calls, restart, bind-mount move, deployment, release tag or CI workflow is part of this import.
 
-## 🚧 In progress / where we left off
-- <what was mid-flight when the last session ended, and the EXACT stopping point —
-  file, branch, command, or step so it can be resumed cold>
+## Review-sensitive differences
 
-## ➡️ Next step (the very first thing to do next session)
-- <the single most immediate action; then what follows>
+- Confidential account and optional Supabase project pins are reserved `example.invalid` values, preserving exact-match validation without publishing personal metadata. New confidential installations require reviewed adaptation.
+- Bootstrap cwd/Doppler scope now derives from the executable checkout (source and compiled), not one absolute host path. Fresh-path tests exposed the old assumption. Fixed project/config/official API, clean child environment and no environment/CLI scope override remain. The installed sibling retains its existing code/scope.
+- Host-specific agenda/rollout/audit/restart helpers and historical live reports were excluded. Portable Docker build and dashboard-only review Compose are supplied; any provider/TLS overlay and live cutover require approval.
+- Protected AGENTS update was denied; the pre-existing owner-provided file is untouched by import and still has stale docs-only commands. README/SETUP/TESTING are current. Do not bypass protected-file permission.
 
-## ⚠️ Open questions / blockers
-- <decisions needed, things waiting on a human, known issues>
+## Remaining gates
 
-## 🧠 Recent decisions (short log)
-- YYYY-MM-DD — <decision + one-line why> 
-- YYYY-MM-DD — <decision + one-line why>
+Independent exact staged-tree secret/scope/code review, then conventional commit and feature-branch push with remote readback. Do not force-push main. Source publication is authorized, but tag/release/CI/deployment and assigning a root code license are not. Font OFLs/provenance are retained. Full accessibility and OS credential isolation remain separate assessments.
 
----
-## Session log (append newest on top)
-### YYYY-MM-DD — <session title>
-- Did: <what got done>
-- Left off: <where>
-- Next: <what's queued>
+Fresh-checkout verification passed: 138 source/138 compiled tests, 10 smoke tests, typecheck/build/install, Docker build plus isolated runtime, Chromium fixture check and offline Gitleaks with no findings. Details are in [VALIDATION.md](VALIDATION.md). Raw synthetic outputs and the sanitized import manifest stay outside the repository; no live evidence or calendar data is published.

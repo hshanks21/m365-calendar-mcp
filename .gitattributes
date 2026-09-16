@@ -1,0 +1,3 @@
+# Preserve upstream font/license bytes and provenance hashes exactly.
+public/fonts/*.ttf -text
+public/fonts/*OFL.txt -text -whitespace

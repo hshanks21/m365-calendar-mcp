@@ -1,33 +1,20 @@
-<!--
-════════════════════════════════════════════════════════════════════════════
-ABOUT THIS DOCUMENT — IDEAS.md
-Purpose : A living backlog of "nice-to-have" / future feature sparks. Cheap to
-          capture, expensive to lose. NOT commitments — a place to think out loud.
-Audience: The team (human + agents) capturing and browsing possibilities.
-Update  : Any time an idea strikes. Prune when an item graduates to ROADMAP or
-          is explicitly dropped.
-Belongs : Themed bullets of possible features, moonshots, "what if". Keep it
-          scannable — group by theme as it grows.
-NOT here: Committed work (→ ROADMAP.md). If it has acceptance criteria and
-          intent, it belongs in ROADMAP.
-Delete this comment block once IDEAS holds real content.
-════════════════════════════════════════════════════════════════════════════
--->
+# Ideas — Uncommitted options
 
-# IDEAS — <Project Name>
+These are proposals, not implemented features or approval to expand the security boundary. Promote only after owner review and concrete acceptance criteria in [ROADMAP.md](./ROADMAP.md).
 
-Running backlog of maybes. Add freely; promote to `ROADMAP.md` when one earns
-real intent.
+## Read-only diagnostics
 
-## <Theme A>
-- <idea>
-- <idea>
+- Stable cursor/snapshot paging for retained telemetry, if live offset drift becomes disruptive.
+- Explicit historical policy generation IDs without storing client names or mailbox mappings.
+- A sanitized local export with retention/coverage labels, after privacy review; never export meeting data as telemetry.
+- More precise tool-latency distribution and actual retry measurements, if instrumentation can preserve strict fixed-field privacy.
 
-## <Theme B>
-- <idea>
+## Reliability and accessibility
 
-## Moonshots / just-for-fun
-- <the ambitious ones>
+- Harden existing filesystem path ownership/symlink handling for policy and telemetry, with adversarial tests.
+- Screen-reader regression checks, stale-page recovery and explicit focus management around login/logout.
+- Reproducible pinned browser-verifier packaging for this checkout, without adding it to production runtime dependencies.
 
----
-*Capture the spark the moment it strikes — a lost idea is expensive.*
+## Deliberately separate future designs
+
+Named viewers and distributed persistence require separate threat models. Private IPv4 dashboard HTTPS is implemented, but any new exposure or proxy still requires explicit review. Multi-calendar availability would need explicit per-calendar authorization and complete-result semantics. Calendar writes, mail access and arbitrary Graph proxying remain outside this project's current read-only scope.

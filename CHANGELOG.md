@@ -1,34 +1,13 @@
-<!--
-════════════════════════════════════════════════════════════════════════════
-ABOUT THIS DOCUMENT — CHANGELOG.md
-Purpose : The permanent, human-readable history of what shipped in each version.
-          One entry per release tag. The record of WHAT changed and when.
-Audience: Users, contributors, future-you, agents auditing history.
-Update  : At every release, as part of the tagged commit (see RELEASING.md).
-          Prepend the newest version at the top; never rewrite past entries.
-Belongs : Per-version sections (version + date) grouped into Added / Fixed /
-          Changed / Removed. Omit empty groups.
-NOT here: The release procedure (→ RELEASING.md), volatile working state
-          (→ HANDOFF.md). This is the durable shipped-history layer.
-Format  : Loosely follows "Keep a Changelog" + semantic versioning.
-Delete this comment block once the CHANGELOG has real entries.
-════════════════════════════════════════════════════════════════════════════
--->
-
 # Changelog
 
-All notable changes to this project are documented here. This project follows
-[Semantic Versioning](https://semver.org) (`vMAJOR.MINOR.PATCH`). Newest first.
+## Unreleased
 
-## [Unreleased]
-- <accumulate changes here; they roll into the next tagged version>
+- Consolidated the previously separate implementation, pinned dependencies, source/compiled test inputs, plain dashboard and all self-hosted font notices/provenance into this executable repository.
+- Preserved and reconciled the existing uncommitted project documentation; documented explicit Microsoft modes, Google read-only adapter, optional HTTPS and separate deployment/source boundaries.
+- Added credential-free multi-stage Docker packaging and an allowlisted build context. Private deployment helpers, live logs, policies, caches, telemetry, TLS keys, generated output and personal event scripts are excluded.
+- Replaced private account/project metadata with exact-match reserved invalid pins; deployment-specific adaptation remains reviewed, not an authorization bypass.
+- Pinned bootstrap cwd/Doppler scope to the executable checkout rather than a hardcoded host path, after fresh-path fixture failures. There is no environment/CLI override; the installed sibling and its existing scope remain unchanged.
+- Corrected source-versus-compiled asset and worker paths in synthetic tests; both suites now run from a clean export. Upstream font notice bytes are preserved explicitly via Git attributes.
+- Protected `AGENTS.md` was preserved when its refresh was denied; README/HANDOFF identify its stale docs-only wording.
 
-## [v0.1.0] — YYYY-MM-DD
-### Added
-- <initial features>
-### Fixed
-- <bugs fixed>
-### Changed
-- <behavior changes>
-### Removed
-- <removed/deprecated>
+No release tag, registry publication, CI workflow, deployment or credential change is recorded here. Package `0.1.0` is not a release assertion; see [RELEASING.md](RELEASING.md).

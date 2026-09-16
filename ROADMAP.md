@@ -1,34 +1,13 @@
-<!--
-════════════════════════════════════════════════════════════════════════════
-ABOUT THIS DOCUMENT — ROADMAP.md
-Purpose : What you WILL build next, with enough detail to be buildable. The
-          committed near-term queue — distinct from IDEAS (maybes) and PLAN
-          (the current build's phases).
-Audience: Whoever picks up the next chunk of work (human or agent).
-Update  : When priorities change, an item ships (move to CHANGELOG/done), or a
-          new committed item is added. Promote items here FROM IDEAS.md.
-Belongs : Ordered next items, each with why-it-matters + acceptance criteria +
-          rough approach. "Done when …" for each.
-NOT here: Speculative sparks (→ IDEAS.md), the current build's phase plan
-          (→ PLAN.md).
-Delete this comment block once ROADMAP holds real content.
-════════════════════════════════════════════════════════════════════════════
--->
+# Roadmap — ordered follow-ups
 
-# ROADMAP — <Project Name>
+1. Independently review the exact staged import, credential exclusions, sanitized identity pins and fresh-checkout evidence; commit/push the approved feature branch. Resolve the protected AGENTS documentation update with the owner. Root code licensing remains an owner decision; preserve font notices.
+2. Plan a controlled deployment cutover only when separately authorized. Source checkout and installed sibling are intentionally distinct; do not move existing mounts or silently change secret-manager scope. Adapt reserved invalid identity pins with independent review before any new confidential deployment.
+3. Repeat explicitly authorized live provider acceptance and scope denials for the intended installation. Synthetic tests and last-success telemetry are not continuous liveness or proof of credential-level isolation.
+4. Release automation remains a design: only explicitly approved strict SemVer tags should trigger future build/promotion by immutable digest. No branch-push deployment, mutable latest, new workflow or tag is implemented here.
 
-Committed next work, priority order. Promote items from `IDEAS.md` when they earn
-real intent; retire them here (or to a CHANGELOG) when they ship.
+## Accepted v1 follow-ups
 
-## 1. <Item name>
-- **Why:** <the user/tech value>
-- **Approach:** <rough plan / where it hooks>
-- **Acceptance / done when:** <checkable criteria>
-
-## 2. <Item name>
-- **Why:**
-- **Approach:**
-- **Acceptance / done when:**
-
-## Loose ends
-- <small follow-ups that aren't full roadmap items>
+- Offset telemetry paging can drift or become empty; use regressions before adding snapshot/clamping behavior.
+- Existing telemetry directories/adjacent temp paths remain trusted; separate ownership/symlink hardening and privilege-path review are needed for stronger custody.
+- Complete keyboard/screen-reader/contrast audit before broad accessibility claims.
+- Preserve numeric policy-slot semantics on reconfiguration; do not log real identity/calendar labels.
