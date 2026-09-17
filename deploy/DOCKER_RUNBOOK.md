@@ -11,9 +11,14 @@ Host-specific rollout, personal agenda reads, raw live reports and scripts that 
 ```sh
 docker build -f deploy/Dockerfile -t calendar-mcp:review .
 docker image inspect calendar-mcp:review --format '{{.Id}}'
+CALENDAR_TEST_IMAGE=calendar-mcp:review node --test scripts/container-runtime.test.mjs
 ```
 
 The pinned Node version/digest and npm lockfile are build inputs. The multi-stage build installs OpenSSL for temporary synthetic TLS fixtures, runs source tests/typecheck/build/smoke, prunes development dependencies and copies only runtime source, dependencies, public assets/font notices and healthcheck. `.dockerignore` allowlists build inputs. No build arguments, credentials, host source mounts, live reads or private config are needed.
+
+The shared base installs Debian's pinned PCRE2 security backport; the final runtime removes unused bundled npm/npx, while the build stage retains npm. Run application and helper entrypoints with `node dist/src/<entrypoint>.js` inside the runtime, not `npm run`. All application production dependencies and the existing healthcheck are retained. The runtime regression command above verifies the installed PCRE2 version, absent npm/npx, dependency imports and dashboard-only 401 liveness as UID/GID 1000 with a read-only root, dropped capabilities, tmpfs and `--network none` (no published ports or provider credentials). It does not prove live-provider health.
+
+For publication, scan the actual OCI runtime with the unchanged policy in [RELEASING.md](../RELEASING.md), not merely a base tag or a source dependency audit. The local remediation cleared fixable HIGH/CRITICAL findings; unfixed issues remain and future databases can block release again.
 
 ## Portable Compose baseline (not deployed)
 
