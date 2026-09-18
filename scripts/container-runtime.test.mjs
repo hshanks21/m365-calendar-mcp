@@ -16,13 +16,21 @@ function probe(source) {
   assert.equal(result.status, 0, result.stderr || result.stdout);
 }
 
-test('runtime retains Debian PCRE2 with the security backport', () => {
+test('runtime retains supported Trixie security updates', () => {
   probe(`
     import assert from 'node:assert/strict';
+    import { readFileSync } from 'node:fs';
     import { execFileSync } from 'node:child_process';
-    const version = execFileSync('dpkg-query', ['-W', '-f=\${Version}', 'libpcre2-8-0'], {encoding:'utf8'});
-    execFileSync('dpkg', ['--compare-versions', version, 'ge', '10.42-1+deb12u1']);
-    assert.ok(version);
+    assert.match(readFileSync('/etc/os-release', 'utf8'), /^VERSION_CODENAME=trixie$/m);
+    for (const [name, minimum] of Object.entries({
+      gzip: '1.13-1+deb13u1',
+      'libpcre2-8-0': '10.46-1~deb13u2',
+      'libsqlite3-0': '3.46.1-7+deb13u2',
+      'perl-base': '5.40.1-6+deb13u1',
+    })) {
+      const version = execFileSync('dpkg-query', ['-W', '-f=\${Version}', name], {encoding:'utf8'});
+      execFileSync('dpkg', ['--compare-versions', version, 'ge', minimum]);
+    }
   `);
 });
 

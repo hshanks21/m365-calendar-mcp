@@ -1,6 +1,9 @@
-FROM node:24.21.0-bookworm-slim@sha256:2fe369e969550cde8e867afc3fe370b260140cab4a23d467074295b42163d553 AS base
-# The current official image predates Debian's PCRE2 security backport.
-RUN apt-get update && apt-get install -y --no-install-recommends libpcre2-8-0=10.42-1+deb12u1 && rm -rf /var/lib/apt/lists/*
+FROM node:24.21.0-trixie-slim@sha256:db3ae80f5d8df06e04dabdf7b44cbf008d32de168205fa0294444aabbc08c590 AS base
+# Apply supported Trixie security updates missing from the pinned official image.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gzip=1.13-1+deb13u1 libpcre2-8-0=10.46-1~deb13u2 \
+    libsqlite3-0=3.46.1-7+deb13u2 perl-base=5.40.1-6+deb13u1 \
+    && rm -rf /var/lib/apt/lists/*
 
 FROM base AS build
 WORKDIR /build
