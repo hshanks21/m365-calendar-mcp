@@ -21,6 +21,9 @@ services:
       options: {max-size: "5m", max-file: "3"}
     # Baseline is dashboard-only; add providers only in a reviewed private
     # stdin overlay. Never inject blank/partial provider settings.
+    # Confidential mode requires EXPECTED_USERNAME as well as existing dedicated
+    # identity/cache/policy keys; see ../M365_RUNTIME.md for exact minimum sets.
+    # Supabase broker settings are bootstrap-only, not runtime dependencies.
     environment:
       CALENDAR_DASHBOARD_SECRET: ${CALENDAR_DASHBOARD_SECRET:?Inject privately at runtime}
       CALENDAR_TELEMETRY_FILE: /app/var/telemetry.json

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replaced sanitized compiled account/project pins with mandatory trusted-operator deployment configuration (`CALENDAR_M365_DELEGATED_EXPECTED_USERNAME`, bootstrap-only `CALENDAR_SUPABASE_ALLOWED_ORIGIN`). Exact identity/cache/policy/origin validation and narrow fixed endpoints remain fail-closed. Images no longer require account-specific source edits; private provisioning, review and live activation remain separate gates.
+
 - Added GitHub-hosted branch/PR checks and strict tag-only GHCR image publication with pinned actions, pre-publication vulnerability gating, provenance/SBOM, no tag reuse and digest readback. Deployment remains separately approved; current base-image findings block release.
 
 - Consolidated the previously separate implementation, pinned dependencies, source/compiled test inputs, plain dashboard and all self-hosted font notices/provenance into this executable repository.

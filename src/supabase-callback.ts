@@ -1,6 +1,9 @@
 import { createServer } from "node:http";
 import { randomBytes, timingSafeEqual } from "node:crypto";
-import { SUPABASE_ORIGIN, SUPABASE_REDIRECT } from "./supabase-bootstrap.js";
+import {
+  validateSupabaseOrigin,
+  SUPABASE_REDIRECT,
+} from "./supabase-bootstrap.js";
 // Reuses the reviewed confidential callback's raw-header checks, one-use finish,
 // hard socket lifetime and close-all cleanup. Correlation differs intentionally:
 // GoTrue owns OAuth state and an exact redirect allowlist cannot take ?state=.
@@ -9,11 +12,12 @@ import { SUPABASE_ORIGIN, SUPABASE_REDIRECT } from "./supabase-bootstrap.js";
 export async function startSupabaseCallback(
   authorizeUrl: string,
   signal: AbortSignal,
+  allowedOrigin: string,
 ) {
   signal.throwIfAborted();
   const authorize = new URL(authorizeUrl);
   if (
-    authorize.origin !== SUPABASE_ORIGIN ||
+    authorize.origin !== validateSupabaseOrigin(allowedOrigin) ||
     authorize.pathname !== "/auth/v1/authorize" ||
     authorize.username ||
     authorize.password ||

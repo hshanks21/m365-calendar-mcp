@@ -4,7 +4,7 @@
 
 Source publication and CI workflow changes do **not** authorize a release tag, registry publication or deployment. Package `0.1.0` is private and is not a release announcement. No root code license has been assigned: owner licensing/attribution review remains a distribution gate. Do not create or push a tag without explicit owner approval covering the exact version and commit.
 
-The imported confidential-account and optional Supabase pins remain deliberately unusable `example.invalid` values. These images are **deployment templates, not a drop-in replacement for the working installation**. Review deployment-specific exact pins before deploying; never weaken validation or automatically replace the installed sibling with this build.
+Build once and promote the same immutable image digest: confidential account and optional Supabase pins are now mandatory dedicated trusted-operator settings, not deployment-specific source edits. Review and privately provision the exact pins/policy under the intended Doppler scope before deploying. Missing or invalid inputs fail closed. No image publication automatically replaces the installed sibling or authorizes live reads, consent or rollout. See M365_RUNTIME.md and M365_SUPABASE.md.
 
 ## Implemented automation
 
@@ -49,7 +49,7 @@ Publishing two tags is not transactional. If a copy or readback fails after the 
 ## Approved release procedure
 
 1. Gather exact local/remote state (`git status --short`, branch, HEAD, remote branches/tags) and independently review the intended commit on protected `main`. No feature-branch merge is implied by this document.
-2. Resolve licensing, placeholder-pin/deployment compatibility and the vulnerability blocker. Run [TESTING.md](TESTING.md), release-guard tests and workflow lint; inspect remote CI for the exact commit. Local checks do not establish GitHub Actions success.
+2. Resolve licensing, private deployment-configuration compatibility and the vulnerability blocker. Run [TESTING.md](TESTING.md), release-guard tests and workflow lint; inspect remote CI for the exact commit. Local checks do not establish GitHub Actions success.
 3. Choose the semantic version and align `package.json`, lockfile and MCP advertised version. Record a factual changelog and compatibility/rollback impact. Never move/reuse published versions.
 4. Present exact commit, version, GHCR target, synthetic/live status and evidence. **Wait for explicit tag/push approval.** Creating this workflow or saying “continue” on its implementation is not that approval.
 5. Only after approval, create one annotated tag on the reviewed commit and push that specific tag, not all tags. Verify its remote tag object and peeled commit. Monitor the actual release run and both GHCR tag digests; record the immutable image reference and provenance/SBOM presence.

@@ -115,15 +115,22 @@ test("Supabase standalone bootstrap stores real MSAL cache through private exact
 test("Supabase callback cancel, timeout, denial, occupied port and active slow headers clean up", async () => {
   const m = await api();
   const url =
-    "https://calendar-bootstrap.example.invalid/auth/v1/authorize?provider=azure";
+    "https://abcdefghijklmnopqrst.supabase.co/auth/v1/authorize?provider=azure";
   for (const mode of ["cancel", "timeout", "denial", "slow"]) {
     const stop = new AbortController();
     const cb = await m.startSupabaseCallback(
       url,
       mode === "timeout" ? AbortSignal.timeout(50) : stop.signal,
+      "https://abcdefghijklmnopqrst.supabase.co",
     );
     try {
-      await assert.rejects(m.startSupabaseCallback(url, stop.signal));
+      await assert.rejects(
+        m.startSupabaseCallback(
+          url,
+          stop.signal,
+          "https://abcdefghijklmnopqrst.supabase.co",
+        ),
+      );
       if (mode === "cancel") stop.abort();
       if (mode === "denial") {
         const u = new URL(cb.url);
@@ -236,8 +243,9 @@ test("Supabase exact callback uses one-time local start state cookie, strict raw
   assert.equal(typeof m.startSupabaseCallback, "function");
   const stop = new AbortController();
   const cb = await m.startSupabaseCallback(
-    "https://calendar-bootstrap.example.invalid/auth/v1/authorize?provider=azure",
+    "https://abcdefghijklmnopqrst.supabase.co/auth/v1/authorize?provider=azure",
     stop.signal,
+    "https://abcdefghijklmnopqrst.supabase.co",
   );
   try {
     const start = new URL(cb.url);

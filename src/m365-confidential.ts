@@ -4,11 +4,7 @@ import {
   ResponseMode,
 } from "@azure/msal-node";
 import { randomBytes, createHash } from "node:crypto";
-import {
-  loadDelegatedIdentity,
-  DELEGATED_SCOPES,
-  EXPECTED_ACCOUNT,
-} from "./m365-delegated.js";
+import { loadDelegatedIdentity, DELEGATED_SCOPES } from "./m365-delegated.js";
 import {
   microsoftNetwork,
   serializedOfflineCache,
@@ -207,7 +203,7 @@ export function createConfidentialToken(
     account.realm !== c.tenantId ||
     account.local_account_id !== c.objectId ||
     typeof account.username !== "string" ||
-    account.username.toLowerCase() !== EXPECTED_ACCOUNT ||
+    account.username.toLowerCase() !== c.expectedUsername ||
     account.environment !== "login.microsoftonline.com" ||
     account.home_account_id !== `${c.objectId}.${c.tenantId}`
   )
@@ -390,7 +386,7 @@ export async function createCodeSession(
     codeChallenge: createHash("sha256").update(verifier).digest("base64url"),
     codeChallengeMethod: "S256",
     responseMode: ResponseMode.QUERY,
-    loginHint: EXPECTED_ACCOUNT,
+    loginHint: c.expectedUsername,
     prompt: "select_account",
   });
   return { url, state, nonce, verifier };

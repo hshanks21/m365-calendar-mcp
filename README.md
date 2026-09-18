@@ -39,7 +39,7 @@ No create/update/delete, mail, arbitrary Graph/Google proxy or discovery MCP too
 
 Runtime supports explicit Microsoft app-only or delegated-confidential mode, Google-only, combined, and dashboard-only. MCP stays at `http://127.0.0.1:3217/mcp`; dashboard defaults to exact `http://127.0.0.1:3218/` with optional reviewed private-IPv4 HTTPS.
 
-**Public import safety:** confidential Microsoft account and optional Supabase project pins use deliberately unusable `example.invalid` placeholders. They retain exact-match checks; deployment-specific replacement needs review, not a wildcard or ambient credential fallback. Operator bootstrap cwd/scope is pinned to the executable checkout, never an environment override; the installed sibling retains its own existing scope. See [M365_RUNTIME.md](M365_RUNTIME.md).
+**Deployment portability:** one immutable image accepts mandatory trusted-operator identity pins through dedicated Doppler injection. `CALENDAR_M365_DELEGATED_EXPECTED_USERNAME` and (bootstrap only) `CALENDAR_SUPABASE_ALLOWED_ORIGIN` replace source-specific pins; no defaults, caller-selected identities, broad credential fallback or arbitrary endpoints. Private configuration approval, offline validation and separately authorized live acceptance are still required. Operator bootstrap cwd/scope is pinned to the executable checkout, never an environment override; the installed sibling retains its own existing scope. See [M365_RUNTIME.md](M365_RUNTIME.md).
 
 ## Documentation
 

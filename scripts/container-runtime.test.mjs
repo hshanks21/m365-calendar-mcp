@@ -67,3 +67,56 @@ test('pruned runtime boots nonroot and serves credential-free liveness without a
     } finally { await service.close(); }
   `);
 });
+
+test('one immutable runtime accepts operator identity pins and rejects missing/mismatched pins offline', () => {
+  probe(`
+    import assert from 'node:assert/strict';
+    import { loadConfidentialIdentity, createConfidentialClient, confidentialNetwork, createConfidentialToken } from './dist/src/m365-confidential.js';
+    import { loadSupabaseIdentity } from './dist/src/supabase-bootstrap.js';
+    import { startApplication } from './dist/src/runtime.js';
+    const tenant = '44444444-4444-4444-8444-444444444444';
+    const clientId = '55555555-5555-4555-8555-555555555555';
+    const oid = '66666666-6666-4666-8666-666666666666';
+    const username = 'container-owner@example.invalid';
+    const env = {
+      CALENDAR_M365_MODE: 'delegated-confidential',
+      CALENDAR_M365_DELEGATED_TENANT_ID: tenant,
+      CALENDAR_M365_DELEGATED_CLIENT_ID: clientId,
+      CALENDAR_M365_DELEGATED_ACCOUNT_OBJECT_ID: oid,
+      CALENDAR_M365_DELEGATED_EXPECTED_USERNAME: username,
+      CALENDAR_M365_DELEGATED_CLIENT_SECRET: 'SYNTHETIC-container-client',
+      CALENDAR_M365_DELEGATED_POLICY_JSON: JSON.stringify({calendars:{work:{mailbox:username,calendarId:'SYNTHETIC-work'}},clients:[{id:'container',secret:'SYNTHETIC-caller-'.repeat(3),calendarKeys:['work']}]}),
+      CALENDAR_DASHBOARD_SECRET: 'SYNTHETIC-viewer-'.repeat(3),
+      CALENDAR_TELEMETRY_FILE: '/tmp/delegated-telemetry.json',
+    };
+    const c = loadConfidentialIdentity(env);
+    const now = Math.floor(Date.now()/1000);
+    const jwt = [{alg:'RS256',typ:'JWT'}, {tid:tenant,oid,aud:clientId,iss:c.authority+'/v2.0',sub:'synthetic-sub',preferred_username:username,iat:now,exp:now+3600}].map(v=>Buffer.from(JSON.stringify(v)).toString('base64url')).join('.')+'.SYNTHETIC';
+    const fetcher = async (input, init) => {
+      const u = new URL(String(input));
+      assert.equal(u.origin, 'https://login.microsoftonline.com');
+      if (u.pathname.endsWith('/openid-configuration')) return Response.json({authorization_endpoint:c.authority+'/oauth2/v2.0/authorize',token_endpoint:c.authority+'/oauth2/v2.0/token',issuer:c.authority+'/v2.0',jwks_uri:c.authority+'/discovery/v2.0/keys'});
+      assert.equal(u.pathname, '/'+tenant+'/oauth2/v2.0/token');
+      assert.equal(new URLSearchParams(String(init.body)).get('client_secret'), env.CALENDAR_M365_DELEGATED_CLIENT_SECRET);
+      return Response.json({token_type:'Bearer',scope:'Calendars.ReadBasic',expires_in:3600,access_token:'SYNTHETIC-access',refresh_token:'SYNTHETIC-refresh',id_token:jwt,client_info:Buffer.from(JSON.stringify({uid:oid,utid:tenant})).toString('base64url')});
+    };
+    const client = createConfidentialClient(c, confidentialNetwork(c, fetcher));
+    await client.acquireTokenByRefreshToken({refreshToken:'SYNTHETIC-refresh',scopes:['Calendars.ReadBasic'],forceCache:true});
+    env.CALENDAR_M365_DELEGATED_MSAL_CACHE = client.getTokenCache().serialize();
+    assert.equal(await createConfidentialToken(env, {fetcher:async()=>assert.fail('saved cache must remain offline')})(), 'SYNTHETIC-access');
+    const origin = 'https://zyxwvutsrqponmlkjihg.supabase.co';
+    assert.equal(loadSupabaseIdentity({...env,CALENDAR_SUPABASE_ALLOWED_ORIGIN:origin,CALENDAR_SUPABASE_URL:origin,CALENDAR_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_SYNTHETIC-only'}).supabaseOrigin, origin);
+    for (const value of [undefined, '', 'invalid', 'other@example.invalid']) {
+      await assert.rejects(async()=> {
+        const s = await startApplication({...env,CALENDAR_M365_DELEGATED_EXPECTED_USERNAME:value});
+        await s.close();
+      });
+    }
+    const service = await startApplication(env);
+    try {
+      assert.ok(service.mcp);
+      assert.equal((await fetch(service.dashboard.url+'/api/diagnostics')).status,401);
+      assert.equal((await fetch(service.mcp.url,{headers:{Origin:'http://evil.invalid'}})).status,403);
+    } finally { await service.close(); }
+  `);
+});

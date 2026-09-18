@@ -166,10 +166,14 @@ test("dev host and publishable-only configuration fails before network; generic 
 test("Supabase transport rejects foreign routes, redirects, excessive body, malformed JSON and cancels actual body reads", async () => {
   const m = await api();
   let requests = 0;
-  const network = m.supabaseNetwork(AbortSignal.timeout(5000), async () => {
-    requests++;
-    return new Response("{}");
-  });
+  const network = m.supabaseNetwork(
+    origin,
+    AbortSignal.timeout(5000),
+    async () => {
+      requests++;
+      return new Response("{}");
+    },
+  );
   for (const u of [
     origin + "/rest/v1/users",
     origin + "/auth/v1/token?grant_type=refresh_token",
@@ -188,6 +192,7 @@ test("Supabase transport rejects foreign routes, redirects, excessive body, malf
     assert.equal(
       (
         await m.supabaseNetwork(
+          origin,
           AbortSignal.timeout(5000),
           async () => response,
         )(origin + "/auth/v1/user")
@@ -204,6 +209,7 @@ test("Supabase transport rejects foreign routes, redirects, excessive body, malf
   });
   try {
     const bounded = m.supabaseNetwork(
+      origin,
       AbortSignal.timeout(50),
       (_url: any, init: any) => fetch(f.url, init),
     );

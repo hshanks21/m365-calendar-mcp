@@ -2,16 +2,22 @@ import { createHash } from "node:crypto";
 export const tenant = "11111111-1111-4111-8111-111111111111";
 export const client = "22222222-2222-4222-8222-222222222222";
 export const oid = "33333333-3333-4333-8333-333333333333";
-export const origin = "https://calendar-bootstrap.example.invalid";
+export const origin = "https://abcdefghijklmnopqrst.supabase.co";
 export const env = {
   CALENDAR_M365_DELEGATED_TENANT_ID: tenant,
+  CALENDAR_M365_DELEGATED_EXPECTED_USERNAME: "owner@example.invalid",
   CALENDAR_M365_DELEGATED_CLIENT_ID: client,
   CALENDAR_M365_DELEGATED_ACCOUNT_OBJECT_ID: oid,
   CALENDAR_M365_DELEGATED_CLIENT_SECRET: "SYNTHETIC-secret",
   CALENDAR_SUPABASE_URL: origin,
+  CALENDAR_SUPABASE_ALLOWED_ORIGIN: origin,
   CALENDAR_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_SYNTHETIC-only",
 };
-export function sdkFixture() {
+export function sdkFixture(settings = env) {
+  const tenant = settings.CALENDAR_M365_DELEGATED_TENANT_ID;
+  const client = settings.CALENDAR_M365_DELEGATED_CLIENT_ID;
+  const oid = settings.CALENDAR_M365_DELEGATED_ACCOUNT_OBJECT_ID;
+  const origin = settings.CALENDAR_SUPABASE_ALLOWED_ORIGIN;
   const forms: URLSearchParams[] = [];
   const requests: { url: string; init?: RequestInit }[] = [];
   let claimChange: Record<string, unknown> = {};
@@ -86,7 +92,7 @@ export function sdkFixture() {
       aud: client,
       iss: `https://login.microsoftonline.com/${tenant}/v2.0`,
       sub: "azure-sub",
-      preferred_username: "owner@example.invalid",
+      preferred_username: settings.CALENDAR_M365_DELEGATED_EXPECTED_USERNAME,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600,
       ...claimChange,

@@ -17,6 +17,7 @@ export function selectMicrosoftProvider(env: NodeJS.ProcessEnv) {
     "TENANT_ID",
     "CLIENT_ID",
     "ACCOUNT_OBJECT_ID",
+    "EXPECTED_USERNAME",
     "CLIENT_SECRET",
     "MSAL_CACHE",
     "POLICY_JSON",

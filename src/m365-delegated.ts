@@ -26,7 +26,7 @@ export function silentToken(
       if (
         a.tenantId !== c.tenantId ||
         a.localAccountId !== c.objectId ||
-        a.username.toLowerCase() !== EXPECTED_ACCOUNT ||
+        a.username.toLowerCase() !== c.expectedUsername ||
         a.environment !== "login.microsoftonline.com"
       )
         throw Error();
@@ -59,7 +59,7 @@ export function loadDelegatedConfig(env: NodeJS.ProcessEnv) {
     if (
       Object.keys(p.calendars).length !== 1 ||
       !p.calendars.work ||
-      p.calendars.work.mailbox !== EXPECTED_ACCOUNT ||
+      p.calendars.work.mailbox !== identity.expectedUsername ||
       new Set(p.clients.map((c) => c.id)).size !== p.clients.length ||
       new Set(p.clients.map((c) => c.secret)).size !== p.clients.length ||
       p.clients.some(
@@ -81,13 +81,35 @@ export function createDelegatedReader(
   });
 }
 
-export const EXPECTED_ACCOUNT = "owner@example.invalid";
 export const DELEGATED_SCOPES = [
   "https://graph.microsoft.com/Calendars.ReadBasic",
   "offline_access",
 ];
 export function loadDelegatedIdentity(env: NodeJS.ProcessEnv) {
   try {
+    const allowed = new Set(
+      [
+        "TENANT_ID",
+        "CLIENT_ID",
+        "ACCOUNT_OBJECT_ID",
+        "EXPECTED_USERNAME",
+        "CLIENT_SECRET",
+        "MSAL_CACHE",
+        "POLICY_JSON",
+      ].map((key) => "CALENDAR_M365_DELEGATED_" + key),
+    );
+    if (
+      Object.keys(env).some(
+        (key) =>
+          env[key] !== undefined &&
+          key.startsWith("CALENDAR_M365_") &&
+          key !== "CALENDAR_M365_MODE" &&
+          !allowed.has(key),
+      ) ||
+      (env.CALENDAR_M365_MODE !== undefined &&
+        env.CALENDAR_M365_MODE !== "delegated-confidential")
+    )
+      throw Error();
     const tenantId = z
       .string()
       .uuid()
@@ -100,7 +122,14 @@ export function loadDelegatedIdentity(env: NodeJS.ProcessEnv) {
       .string()
       .uuid()
       .parse(env.CALENDAR_M365_DELEGATED_ACCOUNT_OBJECT_ID);
+    const expectedUsername = z
+      .string()
+      .email()
+      .max(254)
+      .parse(env.CALENDAR_M365_DELEGATED_EXPECTED_USERNAME)
+      .toLowerCase();
     return {
+      expectedUsername,
       tenantId,
       clientId,
       objectId,
@@ -137,7 +166,7 @@ export function verifyDelegatedResult(
   if (a.localAccountId !== c.objectId) refuse("microsoft_account_object");
   if (a.environment !== "login.microsoftonline.com")
     refuse("microsoft_account_environment");
-  if (a.username.toLowerCase() !== EXPECTED_ACCOUNT)
+  if (a.username.toLowerCase() !== c.expectedUsername)
     refuse("microsoft_account_username");
   if (r?.tenantId !== c.tenantId) refuse("microsoft_result_tenant");
   if (claims?.tid !== c.tenantId) refuse("microsoft_claim_tenant");
@@ -146,7 +175,7 @@ export function verifyDelegatedResult(
   if (claims?.iss !== `${c.authority}/v2.0`) refuse("microsoft_issuer");
   if (
     typeof claims?.preferred_username !== "string" ||
-    claims.preferred_username.toLowerCase() !== EXPECTED_ACCOUNT
+    claims.preferred_username.toLowerCase() !== c.expectedUsername
   )
     refuse("microsoft_claim_username");
   if (!r!.accessToken) refuse("microsoft_access_missing");

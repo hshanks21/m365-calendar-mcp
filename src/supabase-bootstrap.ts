@@ -36,7 +36,11 @@ export async function runSupabaseBootstrap(
       try {
         session = await createSupabaseSession(env, signal, deps.fetcher);
         stage = "callback";
-        callback = await startSupabaseCallback(session.url, signal);
+        callback = await startSupabaseCallback(
+          session.url,
+          signal,
+          session.supabaseOrigin,
+        );
         signal.throwIfAborted();
         log(
           "Open this one-use local start URL in your own browser with the SSH tunnel active. No callback URLs or credentials in chat. Check this terminal for storage status.",
@@ -68,7 +72,15 @@ import {
   serializedOfflineCache,
   MicrosoftAuthorizationFailure,
 } from "./m365-msal.js";
-export const SUPABASE_ORIGIN = "https://calendar-bootstrap.example.invalid";
+// Operator-owned approval boundary; never accept a caller/returned URL as the pin.
+export function validateSupabaseOrigin(value: unknown): string {
+  if (
+    typeof value !== "string" ||
+    !/^https:\/\/[a-z]{20}\.supabase\.co$/.test(value)
+  )
+    throw Error("Invalid dedicated Supabase origin.");
+  return value;
+}
 export const SUPABASE_REDIRECT = "http://localhost:8766/supabase/callback";
 export const SUPABASE_SCOPES = [
   "openid",
@@ -89,21 +101,40 @@ class EphemeralAuth extends AuthClient {
 }
 export function loadSupabaseIdentity(env: NodeJS.ProcessEnv) {
   const c = loadConfidentialIdentity(env);
+  const supabaseOrigin = validateSupabaseOrigin(
+    env.CALENDAR_SUPABASE_ALLOWED_ORIGIN,
+  );
   if (
-    env.CALENDAR_SUPABASE_URL !== SUPABASE_ORIGIN ||
+    Object.keys(env).some(
+      (key) =>
+        env[key] !== undefined &&
+        key.startsWith("CALENDAR_SUPABASE_") &&
+        ![
+          "CALENDAR_SUPABASE_URL",
+          "CALENDAR_SUPABASE_ALLOWED_ORIGIN",
+          "CALENDAR_SUPABASE_PUBLISHABLE_KEY",
+        ].includes(key),
+    ) ||
+    env.CALENDAR_SUPABASE_URL !== supabaseOrigin ||
     !/^sb_publishable_[A-Za-z0-9_-]{8,256}$/.test(
       env.CALENDAR_SUPABASE_PUBLISHABLE_KEY ?? "",
     )
   )
     throw Error("Invalid dedicated Supabase configuration.");
-  return { ...c, publishableKey: env.CALENDAR_SUPABASE_PUBLISHABLE_KEY! };
+  return {
+    ...c,
+    supabaseOrigin,
+    publishableKey: env.CALENDAR_SUPABASE_PUBLISHABLE_KEY!,
+  };
 }
 // Only SDK code exchange and authenticated user verification may use this seam.
 // Fixed error responses prevent the SDK from logging rejected transport errors.
 export function supabaseNetwork(
+  allowedOrigin: string,
   signal: AbortSignal,
   fetcher: typeof fetch = fetch,
 ): typeof fetch {
+  const origin = validateSupabaseOrigin(allowedOrigin);
   return async (input, init) => {
     try {
       signal.throwIfAborted();
@@ -111,8 +142,8 @@ export function supabaseNetwork(
         method = init?.method ?? "GET";
       if (!(
         (method === "POST" &&
-          url === SUPABASE_ORIGIN + "/auth/v1/token?grant_type=pkce") ||
-        (method === "GET" && url === SUPABASE_ORIGIN + "/auth/v1/user")
+          url === origin + "/auth/v1/token?grant_type=pkce") ||
+        (method === "GET" && url === origin + "/auth/v1/user")
       ))
         throw Error();
       const response = await fetcher(url, {
@@ -177,7 +208,7 @@ export async function createSupabaseSession(
   const c = loadSupabaseIdentity(env);
   signal.throwIfAborted();
   const auth = new EphemeralAuth({
-    url: SUPABASE_ORIGIN + "/auth/v1",
+    url: c.supabaseOrigin + "/auth/v1",
     headers: { apikey: c.publishableKey },
     storageKey: "calendar-bootstrap",
     flowType: "pkce",
@@ -185,7 +216,7 @@ export async function createSupabaseSession(
     autoRefreshToken: false,
     detectSessionInUrl: false,
     debug: false,
-    fetch: supabaseNetwork(signal, fetcher),
+    fetch: supabaseNetwork(c.supabaseOrigin, signal, fetcher),
   });
   let consumed = false;
   const close = async () => {
@@ -204,6 +235,7 @@ export async function createSupabaseSession(
     if (error || !data.url) throw Error();
     signal.throwIfAborted();
     return {
+      supabaseOrigin: c.supabaseOrigin,
       url: data.url,
       close,
       exchange: async (code: string) => {

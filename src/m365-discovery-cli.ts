@@ -14,6 +14,7 @@ if (args.length === 1 && args[0] === "--help") {
       "TENANT_ID",
       "CLIENT_ID",
       "ACCOUNT_OBJECT_ID",
+      "EXPECTED_USERNAME",
       "CLIENT_SECRET",
       "MSAL_CACHE",
     ].map((k) => "CALENDAR_M365_DELEGATED_" + k);

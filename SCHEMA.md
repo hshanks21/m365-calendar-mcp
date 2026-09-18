@@ -20,6 +20,12 @@ These contracts describe the imported implementation. The provider extensions be
 
 Policy and mapping/client objects reject extra fields. Exactly one nonempty policy source is used; setting both file and JSON fails. File loading uses `statSync`, requires a regular target file and zero group/other permission bits. This is not a no-symlink/ownership/parent-directory security check. Protect the whole path administratively. Repeated keys within a client's array are not deduplicated by validation; use distinct keys to keep counts meaningful. No separate maximum number of calendar mappings is enforced.
 
+## Trusted deployment identity pins
+
+Delegated identity includes mandatory `expectedUsername` from `CALENDAR_M365_DELEGATED_EXPECTED_USERNAME` (email syntax, max 254; validated then lowercased). All existing tenant/client/object UUID and dedicated secret/cache keys remain. `work.mailbox` must exactly match the lowercase pin. Complete selected runtime configuration validates offline before listeners. See [M365_RUNTIME.md](M365_RUNTIME.md) for minimum injection sets; no MCP input can change identity.
+
+Optional Supabase bootstrap uses `CALENDAR_SUPABASE_ALLOWED_ORIGIN` matching `^https://[a-z]{20}\.supabase\.co$`, with `CALENDAR_SUPABASE_URL` exactly equal and the dedicated publishable key. The approved configuration source is independent of the returned authorization URL. Only that origin and fixed auth routes are permitted, never arbitrary API/custom-host overrides. See [M365_SUPABASE.md](M365_SUPABASE.md). Private operator provisioning is approval, not automatic inference from a cache or URL.
+
 ## MCP inputs and results
 
 All tool objects are strict. `calendarKey` matches the same key pattern. `start` and `end` are ISO datetimes with explicit `Z` or numeric offset, with positive elapsed range at most 31 days. No arbitrary mailbox, ID, URL, OData expression or extra tool field is accepted.
