@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.1.1
+## 0.1.2 (prepared; not published)
+
+- Synchronize the disconnect-capacity regression on the actual credential abort event with a bounded wait, rather than assuming server socket-close delivery within 10 ms. Preserve the AbortError reason, 16-operation limit, denial, deadline, no-late-upstream and recovery assertions; production cancellation and capacity handling are unchanged.
+- Align package, root lockfile and advertised MCP versions to 0.1.2. No dependency, provider permission, caller policy or deployment-control changes.
+- Carry forward the previously reviewed all-day handling and briefing reader from 0.1.1. Its failed release tag remains immutable and must not be reused. Publication still requires the hosted release gates; deployment and reader installation remain separately authorized. Production remains on 0.1.0 until an approved rollout, with its image retained for rollback.
+
+## 0.1.1 (failed release; immutable tag)
 
 - Preserve original Google all-day dates and recover Microsoft all-day dates only from verified original zones and exact midnight boundaries, including sub-millisecond precision checks.
 - Add a bounded, read-only morning briefing reader with Eastern day/DST boundaries, explicit incomplete coverage, conflict classification and calendar-title sanitization.

@@ -1,5 +1,20 @@
 # Runtime deployment configuration handoff
 
+## Local 0.1.2 preparation (not published)
+
+Package, root lockfile and advertised MCP versions are mechanically aligned to 0.1.2. The disconnect test fix below is the only behavioral delta from the immutable failed v0.1.1 tag, and affects tests only. Independent final-review evidence is retained at `/home/harvito/calendar-release-v0.1.2/final-review/`; consult its report for the exact reviewed tree and checks. Commit, push, tag, hosted publication and rollout remain separate gates. No production, credential, reader-installation or cron change is included.
+
+## Disconnect regression diagnosis (before version preparation)
+
+- Focused branch `fix/disconnect-test-synchronization` starts from unchanged `a4d50ebb4373828cba3f7a49b89bf1b6d12582c7` / `v0.1.1`. No version bump, commit, push, tag, publication or deployment is part of this fix.
+- Hosted compiled `concurrency.test.js:123` asserts credential cancellation after a 10 ms sleep. Client fetch rejection is not a server-close acknowledgment. Delaying server close-event delivery by 40 ms reproduces the exact `false !== true` assertion at the same compiled line; awaiting the abort event fixes that schedule without changing runtime code or relaxing assertions.
+- Deliberately releasing operation capacity before ignored-abort tokens settle makes the fixed test fail with `24 !== 16`; removing both disconnect signal inputs makes it fail with `TimeoutError !== AbortError`. Both generated-code mutants were restored.
+- Verification: 40/40 targeted runs (20 source, 20 compiled; four processes sharing one CPU and delayed close events), complete source and compiled suites (144 each), smoke (10), typecheck, build, formatting and whitespace checks passed. A fresh no-cache Docker build passed the unchanged complete Dockerfile line-16 command on pinned Node 24.21.0; host tests used Node 24.19.0.
+- Local evidence is `/home/harvito/calendar-release-v0.1.1/disconnect-fix/` (exact RED, mutation failures, stress logs/runner, Docker log and patch). Independent review and any future v0.1.2 release remain separate gates. The historical runner's precise scheduling is not observable from its assertion log; the reproduced scheduling defect is established, not an assertion that the host itself delayed exactly 40 ms.
+- Installed services, credentials, reader installation and cron were not accessed or changed. Preserve the owner's v0.1.0 production / reader-uninstalled / cron-off state.
+
+## Earlier configuration handoff (historical)
+
 ## Current state and authority
 
 On `feat/import-calendar-implementation`, based on `553f603`, this follow-up removes the sanitized-source deployment blocker: one immutable image accepts mandatory trusted-operator account/project pins without private source edits. The exact staged tree needs independent review **before any commit/push**. No merge, tag, registry publication, new consent, provider request or live deployment is authorized or performed.

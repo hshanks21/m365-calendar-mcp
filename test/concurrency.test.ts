@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
+import { once } from "node:events";
 import { Graph } from "../src/graph.js";
 import { startServer } from "../src/server.js";
 import { config, fixture, range } from "./fixtures.js";
@@ -136,8 +137,15 @@ test("authenticated disconnects retain operation slots until ignored-abort token
       if (first !== "started") denied.push(await first.json());
       controller.abort();
       await response.catch(() => {});
-      await delay(10); // Let the real server observe the socket close.
       if (first === "started") {
+        // Client rejection does not acknowledge the server's socket close.
+        // Await actual credential cancellation, bounded independently so a
+        // missing close cannot hang; retain the AbortError check below so the
+        // Graph deadline cannot masquerade as disconnect cancellation.
+        const signal = pending.at(-1)?.signal;
+        assert.ok(signal);
+        if (!signal.aborted)
+          await once(signal, "abort", { signal: AbortSignal.timeout(1000) });
         assert.equal(pending.at(-1)?.signal?.aborted, true);
         assert.equal(
           pending.at(-1)?.signal?.reason.name,
