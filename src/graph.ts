@@ -8,8 +8,55 @@ export type Event = {
   showAs: string;
   isCancelled: boolean;
   isAllDay: boolean;
+  /** Original calendar dates; endDate is exclusive. Never timezone-shift these. */
+  startDate?: string;
+  endDate?: string;
   private: boolean;
 };
+// Only losslessly recover all-day dates with a provider-supplied original zone.
+// Custom/unsupported Windows zones or nonmidnight boundaries remain unavailable.
+function allDayDates(
+  start: string,
+  end: string,
+  startZone: unknown,
+  endZone: unknown,
+): { startDate?: string; endDate?: string } {
+  if (typeof startZone !== "string" || startZone !== endZone) return {};
+  const zone =
+    startZone === "Eastern Standard Time" ? "America/New_York" : startZone;
+  try {
+    const fmt = new Intl.DateTimeFormat("en-CA", {
+      timeZone: zone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    });
+    const dates = [start, end].map((value) => {
+      // Inspect original Graph precision before Date truncates submilliseconds.
+      // Recovery accepts only whole seconds or an explicitly all-zero fraction.
+      if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.0+)?Z?$/.test(value))
+        throw Error("not_exact_boundary");
+      const parts = Object.fromEntries(
+        fmt
+          .formatToParts(new Date(value.endsWith("Z") ? value : value + "Z"))
+          .map((p) => [p.type, p.value]),
+      );
+      if (parts.hour !== "00" || parts.minute !== "00" || parts.second !== "00")
+        throw Error("not_midnight");
+      return `${parts.year}-${parts.month}-${parts.day}`;
+    });
+    return dates[0] < dates[1]
+      ? { startDate: dates[0], endDate: dates[1] }
+      : {};
+  } catch {
+    return {};
+  }
+}
+
 export type View = { complete: boolean; events: Event[]; error?: string };
 export type GraphOptions = {
   delegated?: Mapping;
@@ -58,7 +105,7 @@ export class Graph {
     url.searchParams.set("$top", "100");
     url.searchParams.set(
       "$select",
-      "id,subject,sensitivity,start,end,showAs,isCancelled,isAllDay",
+      "id,subject,sensitivity,start,end,showAs,isCancelled,isAllDay,originalStartTimeZone,originalEndTimeZone",
     );
     const events: Event[] = [];
     let next: string | undefined = url.href;
@@ -199,6 +246,14 @@ export class Graph {
             showAs: e.showAs,
             isCancelled: e.isCancelled,
             isAllDay: e.isAllDay,
+            ...(e.isAllDay
+              ? allDayDates(
+                  e.start.dateTime,
+                  e.end.dateTime,
+                  e.originalStartTimeZone,
+                  e.originalEndTimeZone,
+                )
+              : {}),
             private: e.sensitivity !== "normal",
           });
         }

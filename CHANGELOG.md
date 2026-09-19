@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Preserve original Google all-day dates and recover Microsoft all-day dates only from verified original zones and exact midnight boundaries, including sub-millisecond precision checks.
+- Add a bounded, read-only morning briefing reader with Eastern day/DST boundaries, explicit incomplete coverage, conflict classification and calendar-title sanitization.
+- Keep provider permissions, caller policies and deployment controls unchanged. Deploy by a newly published immutable digest; retain the previous image for rollback. Reader installation is a separate reviewed-artifact operation.
+
 ## Unreleased
 
 - Replaced sanitized compiled account/project pins with mandatory trusted-operator deployment configuration (`CALENDAR_M365_DELEGATED_EXPECTED_USERNAME`, bootstrap-only `CALENDAR_SUPABASE_ALLOWED_ORIGIN`). Exact identity/cache/policy/origin validation and narrow fixed endpoints remain fail-closed. Images no longer require account-specific source edits; private provisioning, review and live activation remain separate gates.

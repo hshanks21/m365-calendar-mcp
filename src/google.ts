@@ -269,6 +269,7 @@ export class GoogleCalendar {
                   : "busy",
             isCancelled: false,
             isAllDay: allDay,
+            ...(allDay ? { startDate: e.start.date, endDate: e.end.date } : {}),
             private: privateEvent,
           });
         }

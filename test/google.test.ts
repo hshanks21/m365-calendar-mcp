@@ -161,6 +161,8 @@ test("Google date-only events respect calendar timezone and DST; incomplete page
     assert.equal(v.events[0].start, "2026-03-08T05:00:00.000Z");
     assert.equal(v.events[0].end, "2026-03-09T04:00:00.000Z");
     assert.equal(v.events[0].isAllDay, true);
+    assert.equal((v.events[0] as any).startDate, "2026-03-08");
+    assert.equal((v.events[0] as any).endDate, "2026-03-09");
     for (mode of ["loop", "bad", "error", "redirect"]) {
       const v = await g.view({ calendarId: "fake" }, range);
       assert.equal(v.complete, false);

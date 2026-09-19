@@ -109,7 +109,7 @@ export async function startServer(
     const client = res.locals.client as Config["clients"][number];
     const server = new McpServer({
       name: "scoped-calendar",
-      version: "0.1.0",
+      version: "0.1.1",
     });
     for (const name of names) {
       const inputSchema =
